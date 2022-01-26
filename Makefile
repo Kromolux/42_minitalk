@@ -6,7 +6,7 @@
 #    By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/01/25 15:44:10 by rkaufman          #+#    #+#              #
-#    Updated: 2022/01/26 06:03:42 by rkaufman         ###   ########.fr        #
+#    Updated: 2022/01/26 18:26:06 by rkaufman         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,7 @@ CFLAGS 		:=	-Wall -Wextra -Werror
 
 all: $(NAME)
 
-$(NAME):
+$(NAME): 
 	$(CC) $(CFLAGS) $(SERVER) -o server
 	$(CC) $(CFLAGS) $(CLIENT) -o client
 

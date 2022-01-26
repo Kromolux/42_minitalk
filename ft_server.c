@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:57 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/01/26 12:52:32 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/01/26 19:50:41 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,39 +16,68 @@ void	sig1_handler(int signum);
 void	sig2_handler(int signum);
 void	more_info(int signum, siginfo_t *info, void *content);
 
+typedef struct s_package
+{
+	int			data;
+	int			bit_number;
+} 				t_package;
+
+t_package	g_package;
+
 
 int	main(void)
 {
 	struct sigaction	sa1;
 	struct sigaction	sa2;
+
+	g_package.data = 0;
+	g_package.bit_number = 0;
 	sa1.sa_handler = &sig1_handler;
 	sa1.sa_sigaction = &more_info;
+	sa1.sa_flags = SA_RESTART;
 	sa2.sa_handler = &sig2_handler;
 	sa2.sa_sigaction = &more_info;
+	sa2.sa_flags = SA_RESTART;
 	sigaction(SIGUSR1, &sa1, NULL);
 	sigaction(SIGUSR2, &sa2, NULL);
 	//signal(SIGUSR1, sig1_handler);
 	printf("PID=[%i]\n", getpid());
 	printf("SIGUSR1=%i SIGUSR2=%i\n", SIGUSR1, SIGUSR2);
-	pause();
+	while (1);
 	return (0);
 }
 
 void	sig1_handler(int signum)
 {
-	printf("got a 1 signal! %i\n", signum);
+	printf("\ngot a 1 signal! %i\n", signum);
 }
 
 
 void	sig2_handler(int signum)
 {
-	printf("got a 2 signal! %i\n", signum);
+	printf("\ngot a 2 signal! %i\n", signum);
 }
 
 void	more_info(int signum, siginfo_t *info, void *content)
 {
+	int	bit;
 
-	printf("signal=[%i] content=[%p]\n", signum, content);
+	bit = (int) content;
+	if (signum == SIGUSR1)
+		bit = 0;
+	else if (signum == SIGUSR2)
+		bit = 1;
+	g_package.data = (bit << g_package.bit_number) | g_package.data;
+	g_package.bit_number++;
+	if (g_package.bit_number == 32)
+	{
+		write(1, &g_package.data, 4);
+		g_package.bit_number = 0;
+		g_package.data = 0;
+	}
+	kill(info->si_pid, SIGUSR1);
+	/*
+	printf("\n\nsignal=[%i] content=[%p]\n", signum, content);
 	printf("Signal number=[%i]\n", info->si_signo);
 	printf("An errno value=[%i]\n", info->si_errno);
 	printf("Signal code=[%i]\n", info->si_code);
@@ -57,6 +86,7 @@ void	more_info(int signum, siginfo_t *info, void *content)
 	printf("Sending process ID=[%i]\n", info->si_pid);
 	printf("Real user ID of sending process=[%i]\n", info->si_uid);
 	printf("Exit value or signal=[%i]\n", info->si_status);
+
 	printf("User time consumed=[%li]\n", info->si_utime);
 	printf("System time consumed=[%li]\n", info->si_stime);
 	printf("POSIX.1b signal=[%i]\n", info->si_int);
@@ -73,4 +103,5 @@ void	more_info(int signum, siginfo_t *info, void *content)
 	printf("Address of system call instruction (since Linux 3.5)=[%p]\n", info->si_call_addr);
 	printf("Number of attempted system call (since Linux 3.5)=[%i]\n", info->si_syscall);
 	printf("Architecture of attempted system call (since Linux 3.5)=[%i]\n", info->si_arch);
+	*/
 }
