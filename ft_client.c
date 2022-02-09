@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:59 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/01/26 20:00:14 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/01/29 20:40:08 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,18 +22,22 @@ int	main(int argc, char **argv)
 {
 	int	pid;
 	struct sigaction	sa1;
+	struct sigaction	sa2;
 
 	g_received = 1;
 	sa1.sa_sigaction = &sig1_handler;
 	sa1.sa_flags = SA_RESTART;
+	sa2.sa_sigaction &sig1_handler;
+	sa2.sa_flags = SA_RESTART;
 	sigaction(SIGUSR1, &sa1, NULL);
+	sigaction(SIGUSR2, &sa2, NULL);
 	if (argc != 3)
 		return (-1);
 	pid = ft_atoi(argv[1]);
 	//sigaction(SIGUSR1, &sa1, NULL);
 	printf("PID=[%i]\n", getpid());
 	//kill(pid, SIGUSR2);
-	printf("[%s]\n", argv[2]);
+	printf("[%s][%s]\n", argv[1], argv[2]);
 	ft_send_data(pid, argv[2][0]);
 	pause();
 	//usleep(50);
@@ -89,11 +93,13 @@ void	sig1_handler(int signum, siginfo_t *info, void *content)
 void	ft_write_int_in_bits(int data)
 {
 	int	i;
+	char	c;
 
 	i = 0;
 	while (i < 32)
 	{
-		write(1, (char) (((data >> i) & 1) + '0'), 1);
+		c = (char) (((data >> i) & 1) + '0');
+		write(1, &c, 1);
 		i++;
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:57 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/01/26 19:50:41 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/01/29 20:34:41 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,9 @@ void	more_info(int signum, siginfo_t *info, void *content)
 {
 	int	bit;
 
-	bit = (int) content;
+	if (content)
+		bit = 0;
+	//bit = (int) content;
 	if (signum == SIGUSR1)
 		bit = 0;
 	else if (signum == SIGUSR2)
