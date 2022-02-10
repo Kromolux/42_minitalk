@@ -6,46 +6,42 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:59 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/01/29 20:40:08 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/10 19:35:56 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-#include <stdio.h>
-static int	ft_atoi(const char *nptr);
-void	sig1_handler(int signum, siginfo_t *info, void *content);
-void	ft_send_data(int pid, int data);
 
-int	g_received;
+static int	ft_atoi(const char *nptr);
+static void	sig1_handler(int signum, siginfo_t *info, void *content);
+static void	ft_send_data(int data);
+
+t_client	g_client;
 
 int	main(int argc, char **argv)
 {
-	int	pid;
+	int i;
 	struct sigaction	sa1;
-	struct sigaction	sa2;
 
-	g_received = 1;
+	if (argc != 3)
+	{
+		write(1, "program needs 2 arguments! [server-PID] [string_to_send]\n", 57);
+		return (-1);
+	}
+	i = 0;
+	g_client.signal_received = 1;
+	//sa1.sa_handler = &sig2_handler;
 	sa1.sa_sigaction = &sig1_handler;
 	sa1.sa_flags = SA_RESTART;
-	sa2.sa_sigaction &sig1_handler;
-	sa2.sa_flags = SA_RESTART;
 	sigaction(SIGUSR1, &sa1, NULL);
-	sigaction(SIGUSR2, &sa2, NULL);
-	if (argc != 3)
-		return (-1);
-	pid = ft_atoi(argv[1]);
-	//sigaction(SIGUSR1, &sa1, NULL);
-	printf("PID=[%i]\n", getpid());
-	//kill(pid, SIGUSR2);
-	printf("[%s][%s]\n", argv[1], argv[2]);
-	ft_send_data(pid, argv[2][0]);
-	pause();
-	//usleep(50);
-	//kill(pid, SIGUSR1);
-
-	//kill(pid, SIGUSR1);
-
-	//write(1, "\u00A9\n", 3);
+	//sigaction(SIGUSR2, &sa2, NULL);
+	g_client.pid = ft_atoi(argv[1]);
+	while (argv[2][i])
+	{
+		ft_send_data(argv[2][i]);
+		i++;
+	}
+	write(1, "Message send sucessfully!\n", 26);
 	return (0);
 }
 
@@ -65,41 +61,32 @@ static int	ft_atoi(const char *nptr)
 	return (output);
 }
 
-void	ft_send_data(int pid, int data)
+static void	ft_send_data(int data)
 {
 	int	i;
 
 	i = 0;
 	while (i < 32)
 	{
-		if (g_received == 1)
-		{
+		//if (g_client.signal_received == 1)
+		//{
 			if (((data >> i) & 1) == 1)
-				kill(pid, SIGUSR1);
+				kill(g_client.pid, SIGUSR2);
 			else
-				kill(pid, SIGUSR2);
-			g_received = 0;
+				kill(g_client.pid, SIGUSR1);
+			g_client.signal_received = 0;
 			i++;
-		}
+		//}
+	usleep(500);
 	}
 }
 
-void	sig1_handler(int signum, siginfo_t *info, void *content)
+static void	sig1_handler(int signum, siginfo_t *info, void *content)
 {
-	printf("received feedback=[%i] from pid=[%i] [%p]\n", signum, info->si_pid, content);
-	g_received = 1;
-}
-
-void	ft_write_int_in_bits(int data)
-{
-	int	i;
-	char	c;
-
-	i = 0;
-	while (i < 32)
-	{
-		c = (char) (((data >> i) & 1) + '0');
-		write(1, &c, 1);
-		i++;
-	}
+	//if (info->si_pid == g_client.pid)
+	write(1, "^", 1);
+	g_client.signal_received = 1;
+	return ;
+	if (signum == SIGUSR1 || info->si_pid == g_client.pid || content)
+		return ;
 }

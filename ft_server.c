@@ -6,78 +6,67 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:57 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/01/29 20:34:41 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/10 19:32:21 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-#include <stdio.h>
-void	sig1_handler(int signum);
-void	sig2_handler(int signum);
-void	more_info(int signum, siginfo_t *info, void *content);
 
-typedef struct s_package
-{
-	int			data;
-	int			bit_number;
-} 				t_package;
+static void	ft_received_signal(int signum, siginfo_t *info, void *content);
+static void	ft_write_number(long number);
 
 t_package	g_package;
-
 
 int	main(void)
 {
 	struct sigaction	sa1;
-	struct sigaction	sa2;
 
 	g_package.data = 0;
 	g_package.bit_number = 0;
-	sa1.sa_handler = &sig1_handler;
-	sa1.sa_sigaction = &more_info;
+	//sa1.sa_handler = &sig1_handler;
+	sa1.sa_sigaction = &ft_received_signal;
 	sa1.sa_flags = SA_RESTART;
-	sa2.sa_handler = &sig2_handler;
-	sa2.sa_sigaction = &more_info;
-	sa2.sa_flags = SA_RESTART;
+	//sa2.sa_handler = &sig2_handler;
+	//sa2.sa_sigaction = &more_info;
+	//sa2.sa_flags = SA_RESTART;
 	sigaction(SIGUSR1, &sa1, NULL);
-	sigaction(SIGUSR2, &sa2, NULL);
-	//signal(SIGUSR1, sig1_handler);
-	printf("PID=[%i]\n", getpid());
-	printf("SIGUSR1=%i SIGUSR2=%i\n", SIGUSR1, SIGUSR2);
-	while (1);
+	sigaction(SIGUSR2, &sa1, NULL);
+	write(1, "PID=", 4);
+	ft_write_number(getpid());
+	write(1, "\n", 1);
+	while (1)
+	{
+		pause();
+		kill(g_package.pid, SIGUSR1);
+	}
 	return (0);
 }
 
-void	sig1_handler(int signum)
-{
-	printf("\ngot a 1 signal! %i\n", signum);
-}
-
-
-void	sig2_handler(int signum)
-{
-	printf("\ngot a 2 signal! %i\n", signum);
-}
-
-void	more_info(int signum, siginfo_t *info, void *content)
+static void	ft_received_signal(int signum, siginfo_t *info, void *content)
 {
 	int	bit;
 
 	if (content)
 		bit = 0;
-	//bit = (int) content;
 	if (signum == SIGUSR1)
+	{
 		bit = 0;
+		write(1, ".", 1);
+	}
 	else if (signum == SIGUSR2)
+	{
 		bit = 1;
+		write(1, ":", 1);
+	}
 	g_package.data = (bit << g_package.bit_number) | g_package.data;
 	g_package.bit_number++;
+	g_package.pid = info->si_pid;
 	if (g_package.bit_number == 32)
 	{
-		write(1, &g_package.data, 4);
+		write(1, &g_package.data, 1);
 		g_package.bit_number = 0;
 		g_package.data = 0;
 	}
-	kill(info->si_pid, SIGUSR1);
 	/*
 	printf("\n\nsignal=[%i] content=[%p]\n", signum, content);
 	printf("Signal number=[%i]\n", info->si_signo);
@@ -106,4 +95,19 @@ void	more_info(int signum, siginfo_t *info, void *content)
 	printf("Number of attempted system call (since Linux 3.5)=[%i]\n", info->si_syscall);
 	printf("Architecture of attempted system call (since Linux 3.5)=[%i]\n", info->si_arch);
 	*/
+}
+
+static void	ft_write_number(long number)
+{
+	char	c;
+
+	if (number < 0)
+	{
+		number *= -1;
+		write(1, "-", 1);
+	}
+	if (number > 9)
+		ft_write_number(number / 10);
+	c = (char) (number % 10) + '0';
+	write(1, &c, 1);
 }
