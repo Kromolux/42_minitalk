@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:58:44 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/02/10 17:33:43 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/16 09:59:22 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,13 +20,6 @@ typedef struct s_package
 {
 	int			data;
 	int			bit_number;
-	pid_t		pid;
 }				t_package;
-
-typedef struct s_client
-{
-	int			signal_received;
-	int			pid;
-}				t_client;
 
 #endif

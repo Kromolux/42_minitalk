@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:59 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/02/10 19:35:56 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/16 10:02:53 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,31 +14,33 @@
 
 static int	ft_atoi(const char *nptr);
 static void	sig1_handler(int signum, siginfo_t *info, void *content);
-static void	ft_send_data(int data);
+static void	ft_send_data(int data, int pid);
+static void	ft_write_number(long number);
 
-t_client	g_client;
+int	g_signal_received;
 
 int	main(int argc, char **argv)
 {
-	int i;
+	int					i;
 	struct sigaction	sa1;
 
 	if (argc != 3)
 	{
-		write(1, "program needs 2 arguments! [server-PID] [string_to_send]\n", 57);
+		write(1, "program needs 2 arguments! "
+			"[server-PID] [string_to_send]\n", 57);
 		return (-1);
 	}
 	i = 0;
-	g_client.signal_received = 1;
-	//sa1.sa_handler = &sig2_handler;
+	g_signal_received = 1;
 	sa1.sa_sigaction = &sig1_handler;
-	sa1.sa_flags = SA_RESTART;
+	sa1.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigaction(SIGUSR1, &sa1, NULL);
-	//sigaction(SIGUSR2, &sa2, NULL);
-	g_client.pid = ft_atoi(argv[1]);
+	write(1, "PID=", 4);
+	ft_write_number(getpid());
+	write(1, "\n", 1);
 	while (argv[2][i])
 	{
-		ft_send_data(argv[2][i]);
+		ft_send_data(argv[2][i], ft_atoi(argv[1]));
 		i++;
 	}
 	write(1, "Message send sucessfully!\n", 26);
@@ -61,32 +63,46 @@ static int	ft_atoi(const char *nptr)
 	return (output);
 }
 
-static void	ft_send_data(int data)
+static void	ft_send_data(int data, int pid)
 {
 	int	i;
 
 	i = 0;
-	while (i < 32)
+	while (i < 8)
 	{
-		//if (g_client.signal_received == 1)
-		//{
+		if (g_signal_received == 1)
+		{
+			g_signal_received = 0;
 			if (((data >> i) & 1) == 1)
-				kill(g_client.pid, SIGUSR2);
+				kill(pid, SIGUSR2);
 			else
-				kill(g_client.pid, SIGUSR1);
-			g_client.signal_received = 0;
+				kill(pid, SIGUSR1);
 			i++;
-		//}
-	usleep(500);
+		}
+		usleep(5000);
 	}
 }
 
 static void	sig1_handler(int signum, siginfo_t *info, void *content)
 {
-	//if (info->si_pid == g_client.pid)
-	write(1, "^", 1);
-	g_client.signal_received = 1;
+	g_signal_received = 1;
 	return ;
-	if (signum == SIGUSR1 || info->si_pid == g_client.pid || content)
-		return ;
+	(void)signum;
+	(void)info;
+	(void)content;
+}
+
+static void	ft_write_number(long number)
+{
+	char	c;
+
+	if (number < 0)
+	{
+		number *= -1;
+		write(1, "-", 1);
+	}
+	if (number > 9)
+		ft_write_number(number / 10);
+	c = (char)(number % 10) + '0';
+	write(1, &c, 1);
 }
