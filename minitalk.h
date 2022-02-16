@@ -6,7 +6,7 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:58:44 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/02/16 09:59:22 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/16 17:13:07 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,5 +21,8 @@ typedef struct s_package
 	int			data;
 	int			bit_number;
 }				t_package;
+
+void	ft_write_number(long number);
+int		ft_atoi(const char *nptr);
 
 #endif

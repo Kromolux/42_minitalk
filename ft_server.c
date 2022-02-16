@@ -6,28 +6,28 @@
 /*   By: rkaufman <rkaufman@student.42wolfsburg.de> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/25 12:56:57 by rkaufman          #+#    #+#             */
-/*   Updated: 2022/02/16 10:02:59 by rkaufman         ###   ########.fr       */
+/*   Updated: 2022/02/16 19:03:02 by rkaufman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
 static void	ft_received_signal(int signum, siginfo_t *info, void *content);
-static void	ft_write_number(long number);
 
 int	main(void)
 {
-	struct sigaction	sa1;
+	struct sigaction	sa;
 
-	sa1.sa_sigaction = &ft_received_signal;
-	sa1.sa_flags = SA_SIGINFO | SA_RESTART;
-	sigaction(SIGUSR1, &sa1, NULL);
-	sigaction(SIGUSR2, &sa1, NULL);
+	sa.sa_sigaction = &ft_received_signal;
+	sa.sa_flags = SA_SIGINFO;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGUSR2, &sa, NULL);
 	write(1, "PID=", 4);
 	ft_write_number(getpid());
 	write(1, "\n", 1);
 	while (1)
-		pause();
+		usleep(1);
 	return (0);
 }
 
@@ -49,19 +49,4 @@ static void	ft_received_signal(int signum, siginfo_t *info, void *content)
 	}
 	kill(info->si_pid, SIGUSR1);
 	(void)content;
-}
-
-static void	ft_write_number(long number)
-{
-	char	c;
-
-	if (number < 0)
-	{
-		number *= -1;
-		write(1, "-", 1);
-	}
-	if (number > 9)
-		ft_write_number(number / 10);
-	c = (char)(number % 10) + '0';
-	write(1, &c, 1);
 }
